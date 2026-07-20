@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>David Lun — Job Application Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --surface-0: #F4F2EC;
+    --surface-1: #EEECEA;
+    --surface-2: #FFFFFF;
+    --text-primary: #1A1A18;
+    --text-secondary: #5F5E5A;
+    --text-muted: #888780;
+    --border: rgba(0,0,0,0.10);
+    --border-strong: rgba(0,0,0,0.16);
+    --border-stronger: rgba(0,0,0,0.22);
+    --radius: 8px;
+    --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --text-accent: #185FA5;
+    --bg-accent: #E6F1FB;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --surface-0: #1A1A18;
+      --surface-1: #242422;
+      --surface-2: #2E2E2C;
+      --text-primary: #F0EEE8;
+      --text-secondary: #A8A6A0;
+      --text-muted: #6A6864;
+      --border: rgba(255,255,255,0.10);
+      --border-strong: rgba(255,255,255,0.16);
+      --border-stronger: rgba(255,255,255,0.22);
+      --text-accent: #85B7EB;
+      --bg-accent: #0C447C;
+    }
+  }
+  body {
+    font-family: var(--font-sans);
+    background: var(--surface-0);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 2rem 1.5rem;
+  }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .header { margin-bottom: 1.5rem; }
+  .header h1 { font-size: 18px; font-weight: 500; color: var(--text-primary); }
+  .header p { font-size: 13px; color: var(--text-secondary); margin-top: 3px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1.25rem; }
+  .stat { background: var(--surface-1); border-radius: var(--radius); padding: 0.75rem 1rem; }
+  .stat-l { font-size: 11px; color: var(--text-secondary); margin-bottom: 3px; }
+  .stat-n { font-size: 22px; font-weight: 500; color: var(--text-primary); }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .fb { font-size: 11px; padding: 4px 11px; border-radius: 20px; border: 0.5px solid var(--border-strong); background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.12s; font-family: var(--font-sans); }
+  .fb.on { background: var(--surface-1); color: var(--text-primary); border-color: var(--border-stronger); font-weight: 500; }
+  .fb:hover { background: var(--surface-1); }
+  .note { font-size: 12px; color: var(--text-secondary); background: var(--surface-1); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 1rem; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; min-width: 820px; }
+  thead th { font-size: 11px; font-weight: 500; color: var(--text-secondary); text-align: left; padding: 7px 8px; border-bottom: 0.5px solid var(--border-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: var(--surface-0); }
+  th:nth-child(1) { width: 20%; }
+  th:nth-child(2) { width: 14%; }
+  th:nth-child(3) { width: 7%; }
+  th:nth-child(4) { width: 10%; }
+  th:nth-child(5) { width: 9%; }
+  th:nth-child(6) { width: 13%; }
+  th:nth-child(7) { width: 15%; }
+  th:nth-child(8) { width: 8%; }
+  tbody tr { border-bottom: 0.5px solid var(--border); transition: background 0.1s; cursor: pointer; }
+  tbody tr:hover { background: var(--surface-1); }
+  tbody td { padding: 9px 8px; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+  .exp { display: none; }
+  .exp.open { display: table-row; }
+  .exp-cell { padding: 14px 10px 16px; white-space: normal !important; font-size: 12px; color: var(--text-secondary); line-height: 1.65; background: var(--surface-1); }
+  .exp-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .exp-block p { margin-bottom: 4px; font-size: 12px; }
+  .exp-block strong { color: var(--text-primary); font-weight: 500; }
+  .badge { display: inline-block; font-size: 10px; padding: 2px 7px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+  .tier-a { background: #EAF3DE; color: #27500A; }
+  .tier-b { background: #E6F1FB; color: #0C447C; }
+  .tier-c { background: #FAEEDA; color: #633806; }
+  .track-fin { background: #EEEDFE; color: #3C3489; }
+  .track-ai { background: #FAEEDA; color: #633806; }
+  .track-apm { background: #E1F5EE; color: #085041; }
+  .track-biz { background: #FBEAF0; color: #72243E; }
+  .track-cs { background: #FAECE7; color: #712B13; }
+  .status-sel { font-size: 11px; border: 0.5px solid var(--border-strong); border-radius: 5px; background: var(--surface-2); color: var(--text-primary); padding: 3px 5px; cursor: pointer; width: 100%; font-family: var(--font-sans); }
+  .lnk { color: var(--text-accent); font-size: 11px; text-decoration: none; display: inline-flex; align-items: center; gap: 3px; }
+  .lnk:hover { text-decoration: underline; }
+  .warn { font-size: 11px; color: #854F0B; background: #FAEEDA; padding: 3px 8px; border-radius: 4px; margin-top: 5px; display: inline-block; }
+  .exp-lnk { color: var(--text-accent); font-size: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 3px; margin-top: 8px; }
+  .exp-lnk:hover { text-decoration: underline; }
+  @media (max-width: 600px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .exp-inner { grid-template-columns: 1fr; }
+    body { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>Job Application Tracker</h1>
+    <p>David Lun &nbsp;·&nbsp; Cloud FinOps + AI Strategy &nbsp;·&nbsp; July 2026</p>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="stat-l">Total roles</div><div class="stat-n">24</div></div>
+    <div class="stat"><div class="stat-l">A-tier</div><div class="stat-n" id="sc-a">—</div></div>
+    <div class="stat"><div class="stat-l">Applied</div><div class="stat-n" id="sc-app">—</div></div>
+    <div class="stat"><div class="stat-l">In process</div><div class="stat-n" id="sc-proc">—</div></div>
+  </div>
+  <div class="note"><i class="ti ti-info-circle"></i> Click any row to expand notes. Status updates persist in your browser (localStorage).</div>
+  <div class="filters">
+    <button class="fb on" onclick="filt('all',this)">All</button>
+    <button class="fb" onclick="filt('FinOps',this)">FinOps</button>
+    <button class="fb" onclick="filt('AI Ops',this)">AI Strategy</button>
+    <button class="fb" onclick="filt('APM/PM',this)">APM / PM</button>
+    <button class="fb" onclick="filt('BizOps',this)">BizOps</button>
+    <button class="fb" onclick="filt('CS/TAM',this)">CS / TAM</button>
+    <button class="fb" onclick="filt('A',this)">A-tier only</button>
+    <button class="fb" onclick="filt('active',this)">In process</button>
+  </div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Role</th><th>Company</th><th>Tier</th><th>Track</th><th>Resume</th><th>Comp</th><th>Status</th><th>Link</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+<script>
+const JOBS=[
+  {title:"Cloud FinOps Manager",co:"RSM US LLP",tier:"A",track:"FinOps",resume:"Cloud_2026",comp:"$112k–$225k",loc:"Remote",watch:"Consulting track — frame Avis work as client-delivery",why:"Best consulting-track FinOps role across all scrapes. Multi-cloud, showback/chargeback, FinOps framework delivery.",link:"https://www.linkedin.com/jobs/view/integrated-cloud-consulting-cloud-finops-manager-location-flexible-at-rsm-us-llp-4427201834"},
+  {title:"AI Success Manager",co:"Glean",tier:"A",track:"CS/TAM",resume:"CS_Final",comp:"$120k–$170k OTE",loc:"Hybrid – Nashville",watch:"Hybrid 4 days/wk Nashville — check if workable",why:"Cloud platform knowledge (AWS/GCP/Azure/OCI) required — you have all four. Hot enterprise AI company.",link:"https://www.linkedin.com/jobs/view/ai-success-manager-central-at-glean-4372066056"},
+  {title:"AI Product Manager",co:"BlackLine",tier:"A",track:"APM/PM",resume:"PM_2026",comp:"$133k–$167k",loc:"NYC hybrid",watch:"Finance AI product — lead with FinOps + AI agent angle",why:"Finance/accounting close AI product — FinOps + AI agents side work are perfect framing. NYC hybrid workable from NJ.",link:"https://www.linkedin.com/jobs/view/ai-product-manager-at-blackline-4427150069"},
+  {title:"PM — Agentic AI & Workflow",co:"U.S. Bank",tier:"A",track:"APM/PM",resume:"PM_2026",comp:"$111k–$131k",loc:"Hybrid – Charlotte",watch:"Charlotte hybrid — flag",why:"Early-career AI PM inside a large bank. 2–3 yrs experience preferred. Multi-stakeholder governance maps to ABG work.",link:"https://www.linkedin.com/jobs/view/product-manager-%E2%80%93-agentic-ai-workflow-transformation-at-u-s-bank-4408029379"},
+  {title:"CoS, AI Special Projects",co:"Bayview Asset Mgmt",tier:"A",track:"AI Ops",resume:"BA_Final",comp:"$120k–$180k",loc:"Remote",watch:"Hedge fund culture — high performance bar",why:"Frontier AI platforms, high agency + AI tool fluency + organized operator. Remote. Best AI Ops role from prior scrape.",link:"https://www.linkedin.com/jobs/view/chief-of-staff-ai-special-projects-at-bayview-asset-management-llc-4411580174"},
+  {title:"AI FinOps & Governance Lead",co:"Bayview Asset Mgmt",tier:"A",track:"FinOps",resume:"Cloud_2026",comp:"TBD",loc:"Coral Gables FL",watch:"Likely hybrid — check remote flexibility",why:"Title is literally your profile: AI + FinOps + governance. Same company as CoS role — double opportunity.",link:"https://www.linkedin.com/jobs/view/ai-finops-governance-lead-at-bayview-asset-management-llc-4429474667"},
+  {title:"Product Manager",co:"11:11 Systems",tier:"A",track:"APM/PM",resume:"PM_2026",comp:"TBD",loc:"Remote",watch:"Must frame as PM not analyst — lead with product ownership",why:"JD describes your Avis job repackaged as a PM role. Cloud billing, chargeback, cross-functional Finance + Engineering ownership.",link:"https://www.linkedin.com/jobs/search/?keywords=11%3A11+Systems+Product+Manager"},
+  {title:"CSM — Cloud FinOps",co:"Vantage",tier:"A",track:"CS/TAM",resume:"CS_Final",comp:"TBD",loc:"Remote (NYC/BOS)",watch:"5+ yrs CS preferred — frame Avis analytics partner work as CS",why:"Technical CSM at pure-play FinOps company. AWS/Azure/GCP required. FinOps domain is differentiator.",link:"https://www.linkedin.com/jobs/search/?keywords=Vantage+Customer+Success+Manager"},
+  {title:"Account Manager",co:"DoiT",tier:"A",track:"CS/TAM",resume:"CS_Final",comp:"TBD",loc:"Remote (EST)",watch:"2+ yrs AM/CS — most realistic CS bar seen across all scrapes",why:"Top-5 role overall. Technical CSM, AWS/GCP/Azure strategic partner, FinOps optimization focus. East coast preferred.",link:"https://www.linkedin.com/jobs/search/?keywords=DoiT+Account+Manager"},
+  {title:"CoS, Strategic Ops & AI Workflows",co:"Urrly",tier:"A",track:"AI Ops",resume:"BA_Final",comp:"$170k–$210k",loc:"Remote",watch:"Healthcare domain — no direct experience",why:"CEO-adjacent with explicit Claude Code/Cursor mandate. $170k–$210k. Best new AI Ops role this session.",link:"https://www.linkedin.com/jobs/view/chief-of-staff-strategic-operations-ai-workflows-at-urrly-4440312951"},
+  {title:"AI Strategy and Delivery Lead",co:"Bridge Atlantic",tier:"A",track:"AI Ops",resume:"BA_Final",comp:"$120k–$160k",loc:"Remote",watch:"5+ yrs preferred — frame consulting + AI side work as delivery track record",why:"Enterprise AI transformation — roadmaps, adoption, governance across matrixed orgs.",link:"https://www.linkedin.com/jobs/view/ai-strategy-and-delivery-lead-at-bridge-atlantic-4435979507"},
+  {title:"Managed Services Cloud Engineer – FinOps",co:"AHEAD",tier:"A",track:"FinOps",resume:"Cloud_2026",comp:"$115k–$125k",loc:"Remote",watch:"Lists Apptio Cloudability as preferred — ties to IBM application",why:"Multi-client FinOps delivery firm. AWS/Azure/GCP cost management, showback, tagging, Python, Tableau. 3+ yrs bar.",link:"https://www.linkedin.com/jobs/view/managed-services-cloud-engineer-finops-at-ahead-4407640635"},
+  {title:"Cloud FinOps Analyst",co:"DISCO",tier:"A",track:"FinOps",resume:"Cloud_2026",comp:"TBD + RSU",loc:"Remote",watch:"6–7 yrs preferred — experience stretch",why:"AI-native legal tech. GenAI cost modeling (Anthropic spend) — Kiro gives unique credibility. AWS + Snowflake + Python.",link:"https://www.linkedin.com/jobs/view/cloud-finops-analyst-at-disco-4426653759"},
+  {title:"FinOps Operations Specialist",co:"ProsperOps (Flexera)",tier:"A",track:"FinOps",resume:"Cloud_2026",comp:"~$90k–$130k est",loc:"Remote",watch:"Azure RI/SP hands-on management expected — own the gap in cover letter",why:"Category leader in autonomous cloud cost optimization. Cover letter and Cloud_2026 bullets already drafted.",link:"https://www.linkedin.com/jobs/search/?keywords=ProsperOps+FinOps+Operations+Specialist"},
+  {title:"Brand Technical Specialist – Apptio",co:"IBM",tier:"B",track:"FinOps",resume:"Cloud_2026",comp:"TBD",loc:"Remote",watch:"Direct Apptio experience preferred — own the adjacency gap",why:"Pre-sales solution architecture for Apptio/Cloudability portfolio. Resume tailored and drafted.",link:"https://www.linkedin.com/jobs/search/?keywords=IBM+Apptio+Brand+Technical+Specialist"},
+  {title:"FinOps Specialist / Presales",co:"ProsperOps (Flexera)",tier:"B",track:"FinOps",resume:"Cloud_2026",comp:"TBD",loc:"Remote",watch:"Azure Reservations + Spot VMs depth required",why:"Customer-facing demos, savings analyses, Azure discount consulting. Similar to Solutions Engineer at most companies.",link:"https://www.linkedin.com/jobs/search/?keywords=ProsperOps+FinOps+Specialist"},
+  {title:"Sales Operations Manager",co:"Figma",tier:"B",track:"BizOps",resume:"BA_Final",comp:"$140k–$245k",loc:"Remote",watch:"5+ yrs Sales Ops; Sigma tool gap",why:"Best BizOps role. Forecasting + BI = your reporting toolkit. Mentions Claude Code as plus — genuine edge.",link:"https://www.linkedin.com/jobs/view/sales-operations-manager-at-figma-4392103358"},
+  {title:"RevOps Senior Manager",co:"Pebl",tier:"B",track:"BizOps",resume:"BA_Final",comp:"TBD",loc:"Remote",watch:"Startup environment; CRM admin component",why:"Best experience bar fit (4–7 yrs). SQL + Looker/Tableau = your stack. Consulting analytical mindset valued.",link:"https://www.linkedin.com/jobs/view/revenue-operations-senior-manager-at-pebl-4424224256"},
+  {title:"PM — Civic Tech",co:"Last Call Media",tier:"B",track:"APM/PM",resume:"PM_2026",comp:"$90k–$120k",loc:"Remote",watch:"Government domain; only 25 applicants",why:"Delivery PM between client and engineering — maps to your analytics partner role. Low competition.",link:"https://www.linkedin.com/jobs/view/product-manager-in-civic-tech-remote-at-last-call-media-4422111662"},
+  {title:"AI Deployment Strategist",co:"Didero",tier:"B",track:"AI Ops",resume:"CS_Final",comp:"TBD",loc:"Remote",watch:"Startup; some travel for customer discovery sessions",why:"Agentic supply chain startup. Own post-sale AI agent deployments, map workflows, configure automations. 4–7 yrs.",link:"https://www.linkedin.com/jobs/view/ai-deployment-strategist-at-didero-4438817546"},
+  {title:"Senior Cloud FinOps Analyst",co:"Together for Talent",tier:"B",track:"FinOps",resume:"Cloud_2026",comp:"$100k–$150k",loc:"Remote",watch:"Senior bar — experience stretch",why:"RI/Savings Plan/CUD focus. SQL + BI tools required. B2B SaaS autonomous cloud cost optimization platform.",link:"https://www.linkedin.com/jobs/view/senior-cloud-finops-analyst-at-together-for-talent-4406695838"},
+  {title:"Cloud FinOps Consultant",co:"VBeyond Corporation",tier:"B",track:"FinOps",resume:"Cloud_2026",comp:"TBD",loc:"Remote",watch:"Consulting firm — verify company stability",why:"Hyperscaler consumption strategy, AWS/Azure/GCP governance, commitment instruments. Remote consulting track.",link:"https://www.linkedin.com/jobs/view/cloud-finops-consultant-%E2%80%93-hyperscaler-consumption-strategy-at-vbeyond-corporation-4439355893"},
+  {title:"Solutions Engineer, SELECT",co:"DoiT",tier:"B",track:"CS/TAM",resume:"Cloud_2026",comp:"TBD",loc:"Remote",watch:"Different role from DoiT AM — flag to recruiter if in process",why:"DoiT's SELECT product SE role. Mention to recruiter as additional interest if already in AM process.",link:"https://www.linkedin.com/jobs/view/solutions-engineer-select-by-doit-at-doit-4386174992"},
+  {title:"Director, AI Enablement",co:"HealthEquity",tier:"C",track:"AI Ops",resume:"BA_Final",comp:"$144k–$191k",loc:"Remote",watch:"12+ yrs, Director-level — too senior now",why:"File for 2028. Strong comp and AI CX strategy territory.",link:"https://www.linkedin.com/jobs/view/director-ai-enablement-at-healthequity-4402758230"},
+];
+
+const statuses=["Not started","Researching","Applied","Phone screen","Interview","Offer","Rejected","Bookmarked"];
+const tierCls={A:"tier-a",B:"tier-b",C:"tier-c"};
+const trackCls={"FinOps":"track-fin","AI Ops":"track-ai","APM/PM":"track-apm","BizOps":"track-biz","CS/TAM":"track-cs"};
+
+function loadStates(){
+  try{const s=localStorage.getItem("job_tracker_states");return s?JSON.parse(s):JOBS.map(j=>j.status||"Not started");}
+  catch(e){return JOBS.map(j=>j.status||"Not started");}
+}
+function saveStates(){try{localStorage.setItem("job_tracker_states",JSON.stringify(states));}catch(e){}}
+let states=loadStates();
+let current="all";
+
+function updateStats(){
+  let a=0,app=0,proc=0;
+  JOBS.forEach((j,i)=>{
+    if(j.tier==="A")a++;
+    const s=states[i];
+    if(["Applied","Phone screen","Interview","Offer"].includes(s))app++;
+    if(["Phone screen","Interview","Offer"].includes(s))proc++;
+  });
+  document.getElementById("sc-a").textContent=a;
+  document.getElementById("sc-app").textContent=app;
+  document.getElementById("sc-proc").textContent=proc;
+}
+
+function render(){
+  const tb=document.getElementById("tbody");
+  tb.innerHTML="";
+  JOBS.forEach((j,i)=>{
+    const s=states[i];
+    const isActive=["Phone screen","Interview","Offer"].includes(s);
+    if(current==="A"&&j.tier!=="A")return;
+    if(current==="active"&&!isActive)return;
+    if(!["all","A","active"].includes(current)&&j.track!==current)return;
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td style="font-weight:500" title="${j.title}">${j.title}</td>
+      <td style="color:var(--text-secondary)" title="${j.co}">${j.co}</td>
+      <td><span class="badge ${tierCls[j.tier]||""}">${j.tier}</span></td>
+      <td><span class="badge ${trackCls[j.track]||""}">${j.track}</span></td>
+      <td style="color:var(--text-secondary);font-size:11px">${j.resume}</td>
+      <td style="font-size:11px">${j.comp}</td>
+      <td><select class="status-sel" data-i="${i}" onclick="event.stopPropagation()">${statuses.map(st=>`<option${states[i]===st?" selected":""}>${st}</option>`).join("")}</select></td>
+      <td><a class="lnk" href="${j.link}" target="_blank" rel="noopener" onclick="event.stopPropagation()">View <i class="ti ti-external-link" style="font-size:11px"></i></a></td>
+    `;
+    tr.onclick=()=>{const el=document.getElementById("exp-"+i);if(el)el.classList.toggle("open");};
+    tb.appendChild(tr);
+    const er=document.createElement("tr");
+    er.className="exp";
+    er.id="exp-"+i;
+    er.innerHTML=`<td class="exp-cell" colspan="8">
+      <div class="exp-inner">
+        <div class="exp-block">
+          <p><strong>Why apply</strong></p>
+          <p style="margin-top:4px">${j.why}</p>
+          ${j.watch?`<span class="warn"><i class="ti ti-alert-triangle" style="margin-right:3px"></i>${j.watch}</span>`:""}
+        </div>
+        <div class="exp-block">
+          <p><strong>Details</strong></p>
+          <p style="margin-top:4px">Location: ${j.loc}</p>
+          <p>Resume: ${j.resume}</p>
+          <p>Comp: ${j.comp}</p>
+          <a class="exp-lnk" href="${j.link}" target="_blank" rel="noopener">Open on LinkedIn <i class="ti ti-external-link" style="font-size:11px"></i></a>
+        </div>
+      </div>
+    </td>`;
+    tb.appendChild(er);
+  });
+  document.querySelectorAll(".status-sel").forEach(sel=>{
+    sel.addEventListener("change",e=>{
+      states[parseInt(e.target.dataset.i)]=e.target.value;
+      saveStates();
+      updateStats();
+    });
+  });
+}
+
+function filt(f,btn){
+  current=f;
+  document.querySelectorAll(".fb").forEach(b=>b.classList.remove("on"));
+  btn.classList.add("on");
+  render();
+}
+
+updateStats();
+render();
+</script>
+</body>
+</html>
